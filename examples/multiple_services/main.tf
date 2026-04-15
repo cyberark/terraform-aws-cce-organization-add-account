@@ -8,7 +8,7 @@ terraform {
     }
     idsec = {
       source  = "cyberark/idsec"
-      version = "0.2.1"
+      version = "~> 0.2.1"
     }
   }
 }
@@ -24,9 +24,9 @@ provider "idsec" {
   # - IDSEC_CLIENT_SECRET
 }
 
-module "cce_add_account_sia" {
+module "cce_add_account" {
   source = "../../"
 
   org_onboarding_id = var.org_onboarding_id
-  services          = ["sia"]
+  services          = var.services
 }
