@@ -55,7 +55,7 @@ resource "terraform_data" "validate_services" {
 module "sia" {
   depends_on = [terraform_data.validate_services]
 
-  source                 = "./services_modules/sia"
+  source                 = "./modules/sia"
   dpa_service_account_id = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.dpa.service_account_id
   tenant_id              = data.idsec_cce_aws_tenant_service_details.get_tenant_data.tenant_id
   count                  = contains(var.services, "sia") ? 1 : 0
@@ -64,7 +64,7 @@ module "sia" {
 module "sca" {
   depends_on = [terraform_data.validate_services]
 
-  source                 = "./services_modules/sca"
+  source                 = "./modules/sca"
   sca_service_stage      = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.sca.service_stage
   sca_service_account_id = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.sca.service_account_id
   tenant_id              = data.idsec_cce_aws_tenant_service_details.get_tenant_data.tenant_id
