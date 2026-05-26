@@ -1,0 +1,10 @@
+# Organization Configuration
+# Get this value from the output of the CCE organization module
+org_onboarding_id = "org-abc123"
+
+# AWS Configuration
+aws_region = "us-east-1"
+
+# Services to Enable
+# Must match services configured in the organization
+services = ["secrets_hub"]

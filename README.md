@@ -13,6 +13,7 @@ This module is designed to be run on **AWS member accounts** after the [CCE orga
 - **Multiple Service Support**: 
   - **SCA (Secure Cloud Access)**: Just-in-time privileged access management with optional SSO integration
   - **SIA (Secure Infrastructure Access)**: EC2 instance discovery and secure access
+  - **Secrets Hub**: Centralized secrets management and synchronization with AWS Secrets Manager
 - **Idempotent Operations**: Safe to run multiple times
 - **Standardized Outputs**: Provides ARNs and IDs for all created resources
 
@@ -88,6 +89,7 @@ A complete working example is available in the [`examples/multiple_services/`](e
 | `deployed_services` | List of services deployed for this account |
 | `sia_role_arn` | The SIA role ARN, if enabled (null otherwise) |
 | `sca_role_arn` | The SCA role ARN, if enabled (null otherwise) |
+| `secrets_hub_role_arn` | The Secrets Hub role ARN, if enabled (null otherwise) |
 
 ## Service Details
 
@@ -114,6 +116,24 @@ Enables secure access to EC2 instances with:
 **Resources Created:**
 - IAM role: `CyberArkSIA-{unique-suffix}`
 - IAM policy: `CyberarkJitAccountProvisioningPolicy-{tenant-id-prefix}-{unique-suffix}`
+
+### Secrets Hub
+
+Enables centralized secrets management with:
+- Synchronization of secrets from CyberArk vault to AWS Secrets Manager
+- Automated secret lifecycle management
+- Compliance and audit trail for secrets access
+- Support for secret rotation and updates
+
+**Resources Created:**
+- IAM role: `CyberArk-Secrets-Hub-AllowSecretsAccessRole-{unique-suffix}`
+- IAM policy: `CyberArk-Secrets-Hub-AllowSecretsAccessPolicy`
+
+**Configuration:**
+- The service uses the regions configured in the organization module
+- Secrets can only be created/managed in the specified AWS regions
+- All managed secrets are tagged with `Sourced by CyberArk`
+- Extended access (including read) can be enabled per secret by tagging with `CyberArk Extended Access: true`
 
 ## How It Works
 

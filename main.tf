@@ -24,6 +24,7 @@ data "idsec_cce_aws_organization" "get_org_onboarding_data" {
 
 locals {
   account_id = data.aws_caller_identity.current.account_id
+  tenant_id  = data.idsec_cce_aws_tenant_service_details.get_tenant_data.tenant_id
   # Get services from organization data and normalize "dpa" to "sia"
   org_services_raw = data.idsec_cce_aws_organization.get_org_onboarding_data.services
   org_services     = [for service in local.org_services_raw : service == "dpa" ? "sia" : service]
@@ -57,7 +58,7 @@ module "sia" {
 
   source                 = "./modules/sia"
   dpa_service_account_id = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.dpa.service_account_id
-  tenant_id              = data.idsec_cce_aws_tenant_service_details.get_tenant_data.tenant_id
+  tenant_id              = local.tenant_id
   count                  = contains(var.services, "sia") ? 1 : 0
 }
 
@@ -67,11 +68,22 @@ module "sca" {
   source                 = "./modules/sca"
   sca_service_stage      = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.sca.service_stage
   sca_service_account_id = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.sca.service_account_id
-  tenant_id              = data.idsec_cce_aws_tenant_service_details.get_tenant_data.tenant_id
+  tenant_id              = local.tenant_id
   sso_enable             = tostring(local.parameters.sca.sso_enable)
   sso_region             = local.parameters.sca.sso_enable ? local.parameters.sca.sso_region : null
   sca_power_role_arn     = local.parameters.sca.sca_power_role_arn
   count                  = contains(var.services, "sca") ? 1 : 0
+}
+
+module "secrets_hub" {
+  depends_on = [terraform_data.validate_services]
+
+  source                        = "./modules/secrets_hub"
+  cyberark_secrets_hub_role_arn = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.secrets_hub.global_role_arn
+  secrets_manager_regions       = try(tolist(local.parameters.secrets_hub.secrets_manager_regions), [local.parameters.secrets_hub.secrets_manager_regions])
+  account_id                    = local.account_id
+  tenant_id                     = local.tenant_id
+  count                         = contains(local.services, "secrets_hub") ? 1 : 0
 }
 
 resource "idsec_cce_aws_organization_account" "add_account_to_org" {
@@ -80,10 +92,8 @@ resource "idsec_cce_aws_organization_account" "add_account_to_org" {
   parent_organization_id = var.org_onboarding_id
   account_id             = local.account_id
 
-  # Pass through parameters from organization (e.g., SCA sso_enable, sso_region)
   parameters = data.idsec_cce_aws_organization.get_org_onboarding_data.parameters
 
-  # Services in alphabetical order - MUST include ALL services (existing + new)
   services = concat(
     contains(var.services, "sia") ? [
       {
@@ -101,6 +111,16 @@ resource "idsec_cce_aws_organization_account" "add_account_to_org" {
           scaPowerRoleArn = local.parameters.sca.sca_power_role_arn,
           ssoEnable       = tostring(local.parameters.sca.sso_enable),
           ssoRegion       = local.parameters.sca.sso_enable ? local.parameters.sca.sso_region : null
+        }
+      }
+    ] : [],
+
+    contains(var.services, "secrets_hub") ? [
+      {
+        service_name = "secrets_hub"
+        resources = {
+          SecretsHubCustomerAccessRole = local.parameters.secrets_hub.secrets_hub_customer_access_role,
+          SecretsHubGlobalRole         = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.secrets_hub.global_role_arn
         }
       }
     ] : []

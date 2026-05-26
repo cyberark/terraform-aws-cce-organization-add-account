@@ -32,6 +32,17 @@ EC2 instance discovery and secure access with:
 - IAM role: `CyberArkDynamicPrivilegedAccess-{tenant-id-prefix}`
 - IAM policy: `CyberarkJitAccountProvisioningPolicy-{tenant-id-prefix}`
 
+### Secrets Hub
+Centralized secrets management with:
+- Synchronization of secrets from PAM vault to AWS Secrets Manager
+- Automated secrets lifecycle management
+- Compliance and audit trail for secrets access
+- Support for secret rotation and updates
+
+**Resources Created:**
+- IAM role: `CyberArk-Secrets-Hub-AllowSecretsAccessRole-{unique-suffix}`
+- IAM policy: `CyberArk-Secrets-Hub-AllowSecretsAccessPolicy`
+
 ## Prerequisites
 
 1. **CyberArk Identity Security Platform account**
@@ -68,7 +79,7 @@ Create a `terraform.tfvars` file with your configuration:
 ```hcl
 org_onboarding_id = "org-abc123"           # From organization module output
 aws_region        = "us-east-1"
-services          = ["sia", "sca"]         # Services to enable (must match org config)
+services          = ["sia", "sca", "secrets_hub"]  # Services to enable (must match org config)
 ```
 
 ### Step 3: Deploy
@@ -97,9 +108,10 @@ terraform apply
 After successful deployment, the module outputs:
 
 - `account_onboarding_id`: Unique onboarding identifier for this account
-- `deployed_services`: List of services that were deployed (for example, `["sca", "sia"]`)
+- `deployed_services`: List of services that are deployed (for example, `["sca", "sia", "secrets_hub"]`)
 - `sia_role_arn`: SIA role ARN (null if not enabled)
 - `sca_role_arn`: SCA role ARN (null if not enabled)
+- `secrets_hub_role_arn`: Secrets Hub role ARN (null if not enabled)
 
 ## Important Notes
 

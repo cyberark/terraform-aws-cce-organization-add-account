@@ -1,6 +1,6 @@
 # SIA (Secure Infrastructure Access) Example
 
-This example demonstrates how to deploy the CyberArk CCE Add Account module with only the SIA service.
+This example demonstrates how to deploy the CCE Add Account module with only the SIA service.
 
 ## Overview
 
@@ -8,7 +8,7 @@ This example deploys the SIA (Secure Infrastructure Access) service module, whic
 
 ## Prerequisites
 
-1. **CyberArk Identity Security Platform account**
+1. **Identity Security Platform account**
    - API credentials (client ID and secret)
    - Tenant URL
 

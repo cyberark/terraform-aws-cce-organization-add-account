@@ -25,7 +25,8 @@ provider "idsec" {
 }
 
 module "cce_add_account" {
-  source = "../../"
+  source  = "cyberark/cce-organization-add-account/aws"
+  version = "0.2.2"
 
   org_onboarding_id = var.org_onboarding_id
   services          = var.services
