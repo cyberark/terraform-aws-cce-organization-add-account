@@ -175,4 +175,9 @@ resource "aws_iam_policy" "secrets_hub_policy" {
 resource "aws_iam_role_policy_attachment" "secrets_hub_attach" {
   role       = aws_iam_role.secrets_hub_role.name
   policy_arn = aws_iam_policy.secrets_hub_policy.arn
+
+  depends_on = [
+    aws_iam_role.secrets_hub_role,
+    aws_iam_policy.secrets_hub_policy
+  ]
 }

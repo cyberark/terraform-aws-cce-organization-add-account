@@ -31,6 +31,31 @@ locals {
   # Use user-provided services list
   services   = var.services
   parameters = data.idsec_cce_aws_organization.get_org_onboarding_data.parameters
+  services_list = flatten([
+    contains(var.services, "sia") ? [{
+      service_name = "dpa"
+      resources    = { DpaRoleArn = module.sia[0].deployed_resources.main }
+    }] : [],
+
+    contains(var.services, "sca") ? [{
+      service_name = "sca"
+      resources = {
+        scaPowerRoleArn = module.sca[0].deployed_resources.main,
+        ssoEnable       = tostring(local.parameters.sca.sso_enable),
+        ssoRegion       = local.parameters.sca.sso_enable ? local.parameters.sca.sso_region : null
+      }
+    }] : [],
+
+    contains(var.services, "secrets_hub") ? [{
+      service_name = "secrets_hub"
+      resources = {
+        "SecretsHubCustomerAccessRole" = module.secrets_hub[0].deployed_resources.main,
+        "SecretsHubGlobalRole"         = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.secrets_hub.global_role_arn
+
+      }
+
+    }] : []
+  ])
 }
 
 # Validate that user-provided services match organization services
@@ -80,7 +105,7 @@ module "secrets_hub" {
 
   source                        = "./modules/secrets_hub"
   cyberark_secrets_hub_role_arn = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.secrets_hub.global_role_arn
-  secrets_manager_regions       = try(tolist(local.parameters.secrets_hub.secrets_manager_regions), [local.parameters.secrets_hub.secrets_manager_regions])
+  secrets_manager_regions       = try(split(",", local.parameters.secrets_hub.secrets_manager_regions), local.parameters.secrets_hub.secrets_manager_regions)
   account_id                    = local.account_id
   tenant_id                     = local.tenant_id
   count                         = contains(local.services, "secrets_hub") ? 1 : 0
@@ -94,37 +119,7 @@ resource "idsec_cce_aws_organization_account" "add_account_to_org" {
 
   parameters = data.idsec_cce_aws_organization.get_org_onboarding_data.parameters
 
-  services = concat(
-    contains(var.services, "sia") ? [
-      {
-        service_name = "dpa"
-        resources = {
-          DpaRoleArn = module.sia[0].deployed_resources.main
-        }
-      }
-    ] : [],
-
-    contains(var.services, "sca") ? [
-      {
-        service_name = "sca"
-        resources = {
-          scaPowerRoleArn = local.parameters.sca.sca_power_role_arn,
-          ssoEnable       = tostring(local.parameters.sca.sso_enable),
-          ssoRegion       = local.parameters.sca.sso_enable ? local.parameters.sca.sso_region : null
-        }
-      }
-    ] : [],
-
-    contains(var.services, "secrets_hub") ? [
-      {
-        service_name = "secrets_hub"
-        resources = {
-          SecretsHubCustomerAccessRole = local.parameters.secrets_hub.secrets_hub_customer_access_role,
-          SecretsHubGlobalRole         = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.secrets_hub.global_role_arn
-        }
-      }
-    ] : []
-  )
+  services = local.services_list
 
 
 }
