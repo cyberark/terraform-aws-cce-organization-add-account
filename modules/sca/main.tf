@@ -83,7 +83,6 @@ data "aws_iam_policy_document" "cyberark_account_permissions_policy_document" {
     effect = "Allow"
     actions = ["iam:UpdateAssumeRolePolicy",
       "iam:ListSAMLProviders",
-      "iam:DeleteRolePolicy",
       "iam:PutRolePolicy",
       "iam:GetRolePolicy",
       "iam:GetSAMLProvider",
