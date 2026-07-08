@@ -102,8 +102,9 @@ Provides just-in-time privileged access to cloud resources with:
 - Optional AWS IAM Identity Center (SSO) integration
 
 **Resources Created:**
-- IAM role: `CyberArkRoleSCA-{account-id}`
-- IAM policy: `CyberArkPolicyAccountForSCA-{account-id}`
+- IAM role: `SCARole-{account-id}-{tenant-id}` (same name as the organization management account role)
+- IAM policy: `SCAPolicy-{account-id}-{tenant-id}`
+- IAM permissions policy: `SCAPermissionsPolicy-{account-id}-{tenant-id}`
 - Conditional SSO policy (if SSO is enabled)
 
 ### SIA (Secure Infrastructure Access)

@@ -29,8 +29,11 @@ locals {
   org_services_raw = data.idsec_cce_aws_organization.get_org_onboarding_data.services
   org_services     = [for service in local.org_services_raw : service == "dpa" ? "sia" : service]
   # Use user-provided services list
-  services   = var.services
-  parameters = data.idsec_cce_aws_organization.get_org_onboarding_data.parameters
+  services           = var.services
+  parameters         = data.idsec_cce_aws_organization.get_org_onboarding_data.parameters
+  sca_sso_enable     = try(tobool(tostring(local.parameters.sca.sso_enable)), false)
+  sca_service_region = contains(var.services, "sca") ? data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.sca.service_region : null
+
   services_list = flatten([
     contains(var.services, "sia") ? [{
       service_name = "dpa"
@@ -40,9 +43,9 @@ locals {
     contains(var.services, "sca") ? [{
       service_name = "sca"
       resources = {
-        scaPowerRoleArn = module.sca[0].deployed_resources.main,
-        ssoEnable       = tostring(local.parameters.sca.sso_enable),
-        ssoRegion       = local.parameters.sca.sso_enable ? local.parameters.sca.sso_region : null
+        scaPowerRoleArn = local.sca_sso_enable ? local.parameters.sca.sca_power_role_arn : module.sca[0].deployed_resources.main
+        ssoEnable       = tostring(local.sca_sso_enable)
+        ssoRegion       = local.sca_sso_enable ? local.parameters.sca.sso_region : null
       }
     }] : [],
 
@@ -67,12 +70,23 @@ resource "terraform_data" "validate_services" {
       condition     = length(var.services) > 0 && length(setintersection(toset(var.services), toset(local.org_services))) == length(var.services)
       error_message = <<-EOT
         ERROR: The services list must not be empty and must be a subset of the organization services.
-        
+
         Provided services: ${length(var.services) > 0 ? join(", ", var.services) : "(empty)"}
         Organization services: ${join(", ", local.org_services)}
-        
+
         Please provide at least one service that is configured in the organization.
       EOT
+    }
+    precondition {
+      condition     = !contains(var.services, "sca") || local.sca_service_region != null
+      error_message = <<-EOT
+        ERROR: sca_service_region is required when sca is in services.
+        Ensure SCA is activated and service region is available from tenant service details or org onboarding parameters.
+      EOT
+    }
+    precondition {
+      condition     = !local.sca_sso_enable || try(local.parameters.sca.sso_region, null) != null
+      error_message = "sso_region is required when sso_enable is set to true on organization parameters."
     }
   }
 }
@@ -93,9 +107,10 @@ module "sca" {
   source                 = "./modules/sca"
   sca_service_stage      = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.sca.service_stage
   sca_service_account_id = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.sca.service_account_id
+  sca_service_region     = local.sca_service_region
   tenant_id              = local.tenant_id
-  sso_enable             = tostring(local.parameters.sca.sso_enable)
-  sso_region             = local.parameters.sca.sso_enable ? local.parameters.sca.sso_region : null
+  sso_enable             = local.sca_sso_enable
+  sso_region             = local.sca_sso_enable ? local.parameters.sca.sso_region : null
   sca_power_role_arn     = local.parameters.sca.sca_power_role_arn
   count                  = contains(var.services, "sca") ? 1 : 0
 }

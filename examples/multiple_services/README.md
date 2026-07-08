@@ -18,8 +18,9 @@ Just-in-time privileged access management with:
 - Optional AWS IAM Identity Center (SSO) integration
 
 **Resources Created:**
-- IAM role: `CyberArkRoleSCATerraform-{account-id}`
-- IAM policy: `CyberArkPolicyAccountForSCATerraform-{account-id}`
+- IAM role: `SCARole-{account-id}-{tenant-id}`
+- IAM policy: `SCAPolicy-{account-id}-{tenant-id}`
+- IAM permissions policy: `SCAPermissionsPolicy-{account-id}-{tenant-id}`
 - Conditional SSO policy (if SSO is enabled)
 
 ### SIA (Secure Infrastructure Access)

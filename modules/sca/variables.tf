@@ -3,6 +3,11 @@ variable "sca_service_stage" {
   type        = string
 }
 
+variable "sca_service_region" {
+  description = "The SCA Service region to deploy the resources"
+  type        = string
+}
+
 variable "sca_service_account_id" {
   description = "The AWS account number for SCA account"
   type        = string
