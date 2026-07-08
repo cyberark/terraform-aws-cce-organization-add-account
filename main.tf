@@ -106,6 +106,7 @@ module "secrets_hub" {
   source                        = "./modules/secrets_hub"
   cyberark_secrets_hub_role_arn = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.secrets_hub.global_role_arn
   secrets_manager_regions       = try(split(",", local.parameters.secrets_hub.secrets_manager_regions), local.parameters.secrets_hub.secrets_manager_regions)
+  secrets_hub_origin_ip         = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.secrets_hub.origin_ip
   account_id                    = local.account_id
   tenant_id                     = local.tenant_id
   count                         = contains(local.services, "secrets_hub") ? 1 : 0

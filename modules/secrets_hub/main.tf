@@ -148,6 +148,12 @@ data "aws_iam_policy_document" "allow_secrets_access_assume_role_policy" {
         "${var.tenant_id}-${var.account_id}"
       ]
     }
+
+    condition {
+      test     = "IpAddress"
+      variable = "aws:SourceIp"
+      values   = split(",", var.secrets_hub_origin_ip)
+    }
   }
 }
 

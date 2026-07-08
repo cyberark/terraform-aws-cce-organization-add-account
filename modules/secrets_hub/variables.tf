@@ -17,3 +17,8 @@ variable "tenant_id" {
   description = "The ID of the CyberArk tenant that hosts Secrets Hub (About > Tenant details > ID)"
   type        = string
 }
+
+variable "secrets_hub_origin_ip" {
+  description = "Comma-separated list of Secrets Hub egress IPs allowed to assume the access role. Sourced from the CyberArk tenant service details."
+  type        = string
+}
