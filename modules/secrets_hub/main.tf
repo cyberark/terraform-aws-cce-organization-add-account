@@ -52,12 +52,6 @@ data "aws_iam_policy_document" "secrets_hub_policy_document" {
     resources = ["arn:aws:secretsmanager:*:${var.account_id}:secret:*"]
 
     condition {
-      test     = "StringEqualsIgnoreCase"
-      variable = "aws:ResourceTag/Sourced by CyberArk"
-      values   = [""]
-    }
-
-    condition {
       test     = "ForAnyValue:StringEquals"
       variable = "aws:RequestedRegion"
       values   = var.secrets_manager_regions
