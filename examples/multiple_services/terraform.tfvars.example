@@ -1,0 +1,8 @@
+# Copy this file to terraform.tfvars and set your values.
+
+org_onboarding_id = "org-abc123"
+aws_region        = "us-east-1"
+services          = ["sia", "sca"]
+
+# Optional. Custom SCA IAM prefix (matches org module's sca.role_name). Ignored if sso_enable = true.
+# role_name = "MyPrefix"

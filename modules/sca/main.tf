@@ -20,30 +20,54 @@ locals {
   org_account_id = regex("^arn:aws:iam::([0-9]{12}):role/.+$", var.sca_power_role_arn)[0]
   org_role_name  = regex("^arn:aws:iam::[0-9]{12}:role/(.+)$", var.sca_power_role_arn)[0]
 
+  has_custom_role_name = var.custom_role_name != null && var.custom_role_name != ""
+
   # Default naming uses the org account ID (the account that created the role).
   default_role_name = "SCARole-${local.org_account_id}-${var.tenant_id}"
-  is_default_naming = local.org_role_name == local.default_role_name
+  is_default_naming = !local.has_custom_role_name && local.org_role_name == local.default_role_name
 
   # Non-default naming is always <prefix>-<org_account_id>.
   custom_prefix = (
-    local.is_default_naming ? null : regex(format("^(.+)-%s$", local.org_account_id), local.org_role_name)[0]
+    local.is_default_naming ? null : (
+      local.has_custom_role_name ? var.custom_role_name : regex(format("^(.+)-%s$", local.org_account_id), local.org_role_name)[0]
+    )
   )
 
-  # Member-account role name must match what org onboarding references (org_role_name).
-  sca_cross_account_iam_role_name = local.org_role_name
-
+  sca_cross_account_iam_role_name = (
+    local.has_custom_role_name
+    ? "${var.custom_role_name}-${local.account_id}"
+    : local.org_role_name
+  )
 
   # Policy names use the deployed member account ID, not the org management account ID.
   sca_cross_account_managed_policy_name = (
-    local.is_default_naming
-    ? "SCAPolicy-${local.account_id}-${var.tenant_id}"
-    : "${local.custom_prefix}${local.account_id}ForSCAPolicy"
+    local.has_custom_role_name
+    ? "${var.custom_role_name}${local.account_id}ForSCAPolicy"
+    : (
+      local.is_default_naming
+      ? "SCAPolicy-${local.account_id}-${var.tenant_id}"
+      : "${local.custom_prefix}${local.account_id}ForSCAPolicy"
+    )
   )
   sca_account_permissions_managed_policy_name = (
-    local.is_default_naming
-    ? "SCAPermissionsPolicy-${local.account_id}-${var.tenant_id}"
-    : "${local.custom_prefix}${local.account_id}ForSCAIAMPolicy"
+    local.has_custom_role_name
+    ? "${var.custom_role_name}${local.account_id}ForSCAIAMPolicy"
+    : (
+      local.is_default_naming
+      ? "SCAPermissionsPolicy-${local.account_id}-${var.tenant_id}"
+      : "${local.custom_prefix}${local.account_id}ForSCAIAMPolicy"
+    )
   )
+  sca_eks_cluster_permissions_policy_name = (
+    local.has_custom_role_name
+    ? "${var.custom_role_name}${local.account_id}ForSCAEKSClusterPermissions"
+    : "EKSClusterPermissionsForSCA-${local.account_id}-${var.tenant_id}"
+  )
+
+  # IAM members: full role + policies always; EKS when k8 flag is on.
+  # IDC members: nothing unless k8 flag is on, then role + EKS policy only.
+  is_iam_member   = !var.sso_enable
+  create_sca_role = local.is_iam_member || var.add_permissions_to_manage_cluster
 }
 
 data "aws_iam_policy_document" "sca_cross_account_assume_role_policy" {
@@ -100,8 +124,24 @@ data "aws_iam_policy_document" "sca_account_permissions_policy_document" {
   }
 }
 
+data "aws_iam_policy_document" "sca_eks_cluster_permissions_policy_document" {
+  statement {
+    sid    = "scaeksclusteraccess"
+    effect = "Allow"
+    actions = [
+      "eks:ListClusters",
+      "eks:DescribeCluster",
+      "eks:ListAccessEntries",
+      "eks:CreateAccessEntry",
+      "eks:AssociateAccessPolicy",
+      "eks:ListAssociatedAccessPolicies"
+    ]
+    resources = ["*"]
+  }
+}
+
 resource "aws_iam_role" "sca_cross_account_assume_role" {
-  count              = var.sso_enable == false ? 1 : 0
+  count              = local.create_sca_role ? 1 : 0
   name               = local.sca_cross_account_iam_role_name
   assume_role_policy = data.aws_iam_policy_document.sca_cross_account_assume_role_policy.json
 
@@ -111,27 +151,40 @@ resource "aws_iam_role" "sca_cross_account_assume_role" {
 }
 
 resource "aws_iam_policy" "sca_cross_account_policy" {
-  count       = var.sso_enable == false ? 1 : 0
+  count       = local.is_iam_member ? 1 : 0
   name        = local.sca_cross_account_managed_policy_name
   description = "The policy contains sca cross account permissions"
   policy      = data.aws_iam_policy_document.sca_cross_account_policy_document.json
 }
 
 resource "aws_iam_policy" "sca_account_permissions_policy" {
-  count       = var.sso_enable == false ? 1 : 0
+  count       = local.is_iam_member ? 1 : 0
   name        = local.sca_account_permissions_managed_policy_name
   description = "The policy contains sca IAM account permissions"
   policy      = data.aws_iam_policy_document.sca_account_permissions_policy_document.json
 }
 
 resource "aws_iam_role_policy_attachment" "sca_cross_account_role_attached_to_policy" {
-  count      = var.sso_enable == false ? 1 : 0
+  count      = local.is_iam_member ? 1 : 0
   role       = aws_iam_role.sca_cross_account_assume_role[count.index].name
   policy_arn = aws_iam_policy.sca_cross_account_policy[count.index].arn
 }
 
 resource "aws_iam_role_policy_attachment" "sca_cross_account_role_attached_to_account_permissions_policy" {
-  count      = var.sso_enable == false ? 1 : 0
+  count      = local.is_iam_member ? 1 : 0
   role       = aws_iam_role.sca_cross_account_assume_role[count.index].name
   policy_arn = aws_iam_policy.sca_account_permissions_policy[count.index].arn
+}
+
+resource "aws_iam_policy" "sca_eks_cluster_permissions_policy" {
+  count       = var.add_permissions_to_manage_cluster ? 1 : 0
+  name        = local.sca_eks_cluster_permissions_policy_name
+  description = "SCA EKS cluster management permissions"
+  policy      = data.aws_iam_policy_document.sca_eks_cluster_permissions_policy_document.json
+}
+
+resource "aws_iam_role_policy_attachment" "sca_cross_account_role_attached_to_eks_cluster_policy" {
+  count      = var.add_permissions_to_manage_cluster ? 1 : 0
+  role       = aws_iam_role.sca_cross_account_assume_role[count.index].name
+  policy_arn = aws_iam_policy.sca_eks_cluster_permissions_policy[count.index].arn
 }

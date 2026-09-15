@@ -30,4 +30,5 @@ module "cce_add_account" {
 
   org_onboarding_id = var.org_onboarding_id
   services          = var.services
+  role_name         = var.role_name
 }

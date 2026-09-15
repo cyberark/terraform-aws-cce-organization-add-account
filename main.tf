@@ -29,9 +29,13 @@ locals {
   org_services_raw = data.idsec_cce_aws_organization.get_org_onboarding_data.services
   org_services     = [for service in local.org_services_raw : service == "dpa" ? "sia" : service]
   # Use user-provided services list
-  services           = var.services
-  parameters         = data.idsec_cce_aws_organization.get_org_onboarding_data.parameters
-  sca_sso_enable     = try(tobool(tostring(local.parameters.sca.sso_enable)), false)
+  services       = var.services
+  parameters     = data.idsec_cce_aws_organization.get_org_onboarding_data.parameters
+  sca_sso_enable = try(tobool(tostring(local.parameters.sca.sso_enable)), false)
+  sca_add_permissions_to_manage_cluster = try(
+    local.parameters.sca.addPermissionsToManageCluster,
+    try(local.parameters.sca.add_permissions_to_manage_cluster, false)
+  )
   sca_service_region = contains(var.services, "sca") ? data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.sca.service_region : null
 
   services_list = flatten([
@@ -42,10 +46,12 @@ locals {
 
     contains(var.services, "sca") ? [{
       service_name = "sca"
+      version      = "0.0.6"
       resources = {
-        scaPowerRoleArn = local.sca_sso_enable ? local.parameters.sca.sca_power_role_arn : module.sca[0].deployed_resources.main
-        ssoEnable       = tostring(local.sca_sso_enable)
-        ssoRegion       = local.sca_sso_enable ? local.parameters.sca.sso_region : null
+        scaPowerRoleArn               = local.sca_sso_enable ? local.parameters.sca.sca_power_role_arn : module.sca[0].deployed_resources.main
+        ssoEnable                     = tostring(local.sca_sso_enable)
+        ssoRegion                     = local.sca_sso_enable ? local.parameters.sca.sso_region : null
+        addPermissionsToManageCluster = local.sca_add_permissions_to_manage_cluster
       }
     }] : [],
 
@@ -104,15 +110,17 @@ module "sia" {
 module "sca" {
   depends_on = [terraform_data.validate_services]
 
-  source                 = "./modules/sca"
-  sca_service_stage      = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.sca.service_stage
-  sca_service_account_id = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.sca.service_account_id
-  sca_service_region     = local.sca_service_region
-  tenant_id              = local.tenant_id
-  sso_enable             = local.sca_sso_enable
-  sso_region             = local.sca_sso_enable ? local.parameters.sca.sso_region : null
-  sca_power_role_arn     = local.parameters.sca.sca_power_role_arn
-  count                  = contains(var.services, "sca") ? 1 : 0
+  source                            = "./modules/sca"
+  sca_service_stage                 = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.sca.service_stage
+  sca_service_account_id            = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.sca.service_account_id
+  sca_service_region                = local.sca_service_region
+  tenant_id                         = local.tenant_id
+  sso_enable                        = local.sca_sso_enable
+  sso_region                        = local.sca_sso_enable ? local.parameters.sca.sso_region : null
+  sca_power_role_arn                = local.parameters.sca.sca_power_role_arn
+  custom_role_name                  = var.role_name
+  add_permissions_to_manage_cluster = local.sca_add_permissions_to_manage_cluster
+  count                             = contains(var.services, "sca") ? 1 : 0
 }
 
 module "secrets_hub" {

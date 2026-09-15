@@ -8,3 +8,9 @@ variable "services" {
   type        = list(string)
   default     = []
 }
+variable "role_name" {
+  description = "The IAM role name prefix for SCA cross-account access. If null or empty, the organization's SCA role name is used as the default."
+  type        = string
+  default     = null
+  nullable    = true
+}

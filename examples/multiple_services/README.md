@@ -23,6 +23,14 @@ Just-in-time privileged access management with:
 - IAM permissions policy: `SCAPermissionsPolicy-{account-id}-{tenant-id}`
 - Conditional SSO policy (if SSO is enabled)
 
+### role_name (Optional)
+
+Matches the purpose of the organization module's `sca.role_name`:
+
+- When `sso_enable = false`: Sets the prefix for the member account's SCA IAM roles and policies. If left blank, names follow the organization default.
+- When `sso_enable = true` (IAM Identity Center): No SCA IAM roles or policies are created unless `add_permissions_to_manage_cluster = true` (k8), in which case only the role and EKS policy are created; `role_name` applies to those resources when set.
+
+
 ### SIA (Secure Infrastructure Access)
 EC2 instance discovery and secure access with:
 - Just-in-time access to EC2 instances
@@ -75,12 +83,13 @@ export AWS_REGION="us-east-1"
 
 ### Step 2: Create terraform.tfvars
 
-Create a `terraform.tfvars` file with your configuration:
+Copy terraform.tfvars.example to terraform.tfvars and edit the values, or create a new terraform.tfvars file with your configuration:
 
 ```hcl
 org_onboarding_id = "org-abc123"           # From organization module output
 aws_region        = "us-east-1"
 services          = ["sia", "sca", "secrets_hub"]  # Services to enable (must match org config)
+role_name         = "MyPrefix"      # Optional; prefix for SCA IAM roles when sso_enable = false (see details above)
 ```
 
 ### Step 3: Deploy

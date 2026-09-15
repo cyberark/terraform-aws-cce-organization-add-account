@@ -67,12 +67,13 @@ module "cce_add_account" {
   source = "cyberark/cce-organization-add-account/aws"
 
   org_onboarding_id = "org-abc123"  # From organization module output
+  # role_name = "MyPrefix"  # Optional SCA IAM name prefix; same as org module sca.role_name
 }
 ```
 
 ## Examples
 
-A complete working example is available in the [`examples/multiple_services/`](examples/multiple_services/) directory, which demonstrates how to onboard an AWS member account with all services that are enabled in your organization's configuration.
+A complete working example is available in the examples/multiple_services/ directory. This includes a terraform.tfvars.example file demonstrating the use of the optional role_name variable. The example shows how to onboard an AWS member account with all services enabled in your organization's configuration.
 
 ## Inputs
 
@@ -80,6 +81,8 @@ A complete working example is available in the [`examples/multiple_services/`](e
 |------|-------------|------|----------|
 | `org_onboarding_id` | The organization onboarding ID from the CCE organization module output | `string` | Yes |
 | `services` | List of services to enable for this account (for example, `["sia", "sca"]`). Must match services configured in the organization. | `list(string)` | No (defaults to organization services) |
+
+| `role_name` | The SCA IAM role name prefix (matches the organization module's `sca.role_name`). When `sso_enable = false`, determines the prefix for SCA IAM roles; if omitted, defaults to the organization SCA role from CCE. When `sso_enable = true`, no SCA IAM resources are created in the member account and this input has no effect. | `string` | No |
 
 ## Outputs
 
@@ -106,6 +109,17 @@ Provides just-in-time privileged access to cloud resources with:
 - IAM policy: `SCAPolicy-{account-id}-{tenant-id}`
 - IAM permissions policy: `SCAPermissionsPolicy-{account-id}-{tenant-id}`
 - Conditional SSO policy (if SSO is enabled)
+
+
+**SCA Role Configuration**
+
+- If your organization has `sso_enable = false`, you can use the optional `role_name` input to set a custom prefix for the member-account IAM roles and policies. To keep things consistent, match this to the `sca.role_name` value used in your management account. If you leave it blank, the module defaults to the SCA role name from CCE.
+- If `sso_enable = true` (IAM Identity Center), this module doesn't create any SCA IAM roles or policies in the member account, so the `role_name` input is ignored.
+
+**IDC (IAM Identity Center) member accounts:** When **`sso_enable = true`**, this module does not create SCA IAM resources in the member account unless **`add_permissions_to_manage_cluster = true`**. In that k8 case it creates only the SCA cross-account role and the EKS cluster permissions policy—not the cross-account, IAM account-permissions, or SSO policies used on the management account or IAM member accounts.
+
+**EKS cluster permissions:** Set **`add_permissions_to_manage_cluster = true`** on the management-account [organization module](https://github.com/cyberark/terraform-aws-cce-organization) (`sca` block); it is stored as **`addPermissionsToManageCluster`** in org parameters. When that value is `true`, this module attaches EKS cluster management permissions to the member-account SCA role (full SCA role for IAM members; role + EKS policy only for IDC members).
+
 
 ### SIA (Secure Infrastructure Access)
 
