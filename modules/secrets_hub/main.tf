@@ -164,6 +164,10 @@ resource "random_string" "role_suffix" {
 resource "aws_iam_role" "secrets_hub_role" {
   name               = "CyberArk-Secrets-Hub-AllowSecretsAccessRole-${random_string.role_suffix.result}"
   assume_role_policy = data.aws_iam_policy_document.allow_secrets_access_assume_role_policy.json
+
+  tags = {
+    "secretshub-version" = "0.0.8"
+  }
 }
 
 resource "aws_iam_policy" "secrets_hub_policy" {
