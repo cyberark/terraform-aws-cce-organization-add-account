@@ -8,7 +8,7 @@ terraform {
     }
     idsec = {
       source  = "cyberark/idsec"
-      version = "0.10.0"
+      version = "0.12.0"
     }
 
   }
@@ -47,12 +47,16 @@ locals {
     contains(var.services, "sca") ? [{
       service_name = "sca"
       version      = "0.0.6"
-      resources = {
-        scaPowerRoleArn               = local.sca_sso_enable ? local.parameters.sca.sca_power_role_arn : module.sca[0].deployed_resources.main
-        ssoEnable                     = tostring(local.sca_sso_enable)
-        ssoRegion                     = local.sca_sso_enable ? local.parameters.sca.sso_region : null
-        addPermissionsToManageCluster = local.sca_add_permissions_to_manage_cluster
-      }
+      resources = merge(
+        {
+          scaPowerRoleArn = local.sca_sso_enable ? local.parameters.sca.sca_power_role_arn : module.sca[0].deployed_resources.main
+          ssoEnable       = tostring(local.sca_sso_enable)
+          ssoRegion       = local.sca_sso_enable ? local.parameters.sca.sso_region : null
+        },
+        local.sca_add_permissions_to_manage_cluster ? {
+          addPermissionsToManageCluster = local.sca_add_permissions_to_manage_cluster
+        } : {}
+      )
     }] : [],
 
     contains(var.services, "secrets_hub") ? [{

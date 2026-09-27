@@ -4,6 +4,16 @@
 *.tfstate.*
 *.tfplan
 *.out
+tests/fixtures/apply_*/
+
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Test artifacts
+test-results.xml
 
 # IDE files
 .idea/
