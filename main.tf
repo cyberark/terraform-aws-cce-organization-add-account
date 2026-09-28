@@ -38,15 +38,26 @@ locals {
   )
   sca_service_region = contains(var.services, "sca") ? data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.sca.service_region : null
 
+  # A member account has no version of its own - it inherits the parent organization's. Carrying the
+  # organization's version here is what makes an organization upgrade visible to Terraform's plan:
+  # the account resource's `services` is never refreshed from the API, so its state holds the
+  # last-applied version and a bumped organization version shows up as a diff. Keyed by the API
+  # service name (dpa, sca, secrets_hub), not the module's "sia" alias.
+  org_service_versions = {
+    for service in data.idsec_cce_aws_organization.get_org_onboarding_data.services_data :
+    service.name => service.version
+  }
+
   services_list = flatten([
     contains(var.services, "sia") ? [{
       service_name = "dpa"
+      version      = lookup(local.org_service_versions, "dpa", null)
       resources    = { DpaRoleArn = module.sia[0].deployed_resources.main }
     }] : [],
 
     contains(var.services, "sca") ? [{
       service_name = "sca"
-      version      = "0.0.6"
+      version      = lookup(local.org_service_versions, "sca", null)
       resources = merge(
         {
           scaPowerRoleArn = local.sca_sso_enable ? local.parameters.sca.sca_power_role_arn : module.sca[0].deployed_resources.main
@@ -61,6 +72,7 @@ locals {
 
     contains(var.services, "secrets_hub") ? [{
       service_name = "secrets_hub"
+      version      = lookup(local.org_service_versions, "secrets_hub", null)
       resources = {
         "SecretsHubCustomerAccessRole" = module.secrets_hub[0].deployed_resources.main,
         "SecretsHubGlobalRole"         = data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.secrets_hub.global_role_arn

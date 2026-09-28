@@ -158,6 +158,19 @@ Enables centralized secrets management with:
 4. **Register Account**: Registers the account with CCE, providing the ARNs of created resources
 5. **Output Information**: Returns resource ARNs and configuration details
 
+## Service Versions and Organization Upgrades
+
+Member accounts do not have their own service versions; each account inherits the version configured
+on its parent organization. This module reads those versions from the organization and passes them
+through, so you never set a service version here.
+
+After you upgrade services on the management account with the
+[CCE organization module](https://github.com/cyberark/terraform-aws-cce-organization), every member
+account moves to a `Waiting for deployment` state and must be re-applied to pick up the new version.
+Re-running this module on each member account is what performs that upgrade: the next `terraform plan`
+shows the inherited version changing, and applying it deploys the new version. No variable needs to
+change and no new version of this module is required.
+
 ## Module Deletion
 
 **⚠️ Understanding Module Deletion**
