@@ -1,10 +1,10 @@
 output "account_onboarding_id" {
-  description = "The ID of the account onboarding resource"
+  description = "The account onboarding resource ID."
   value       = module.cce_add_account.account_onboarding_id
 }
 
 output "deployed_services" {
-  description = "List of CyberArk services deployed for this account"
+  description = "A list of Idira services deployed for this account."
   value       = module.cce_add_account.deployed_services
 }
 
@@ -14,6 +14,6 @@ output "sia_role_arn" {
 }
 
 output "sca_role_arn" {
-  description = "ARN of the SCA IAM role if enabled"
+  description = "The IAM role ARN for Secure Cloud Access, if enabled."
   value       = module.cce_add_account.sca_role_arn
 }

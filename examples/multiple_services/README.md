@@ -4,7 +4,7 @@ This example demonstrates how to onboard an AWS member account to Connect Cloud 
 
 ## Overview
 
-This example will provision resources for all CyberArk services that are enabled in your organization's configuration. The module automatically detects which services were configured when you ran the CCE organization module on your management account and deploys the appropriate resources.
+This example will provision resources for all Idira services that are enabled in your organization's configuration. The module automatically detects which services were configured when you ran the CCE organization module on your management account and deploys the appropriate resources.
 
 ## Supported Services
 
@@ -54,7 +54,7 @@ Centralized secrets management with:
 
 ## Prerequisites
 
-1. **CyberArk Identity Security Platform account**
+1. **Idira Identity Security Platform account**
    - API credentials (client ID and secret)
    - Tenant URL
 
@@ -66,7 +66,7 @@ Centralized secrets management with:
 3. **Terraform**
    - Terraform >= 1.8.5
    - AWS Provider ~> 5.0
-   - CyberArk idsec Provider 0.2.1
+   - Idira idsec Provider 0.2.1
 
 ## Usage
 
@@ -138,5 +138,5 @@ To remove all resources created by this module:
 terraform destroy
 ```
 
-**Warning**: This will remove the IAM roles and unregister the account from CyberArk services.
+**Warning**: This will remove the IAM roles and unregister the account from Idira services.
 

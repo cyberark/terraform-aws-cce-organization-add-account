@@ -1,5 +1,5 @@
 output "deployed_resources" {
-  description = "Map of deployed SCA resources including role ARN and SSO configuration"
+  description = "a map of deployed SCA resources including role ARN and SSO configuration."
   value = {
     main                          = try(one(aws_iam_role.sca_cross_account_assume_role[*].arn), null)
     ssoEnable                     = tostring(var.sso_enable)
@@ -9,7 +9,7 @@ output "deployed_resources" {
 }
 
 output "module_ready" {
-  description = "List of all deployed resource identifiers to ensure dependencies"
+  description = "A list of all deployed resource identifiers to ensure dependencies."
   value = compact([
     try(one(aws_iam_role.sca_cross_account_assume_role[*].arn), null),
     try(one(aws_iam_policy.sca_cross_account_policy[*].arn), null),
