@@ -1,7 +1,7 @@
 # CCE AWS Organization Add Account Onboarding Module
 
-This Terraform module onboards AWS member accounts to Connect Cloud Environments (CCE) with CyberArk SaaS services.
-CCE helps customers easily adopt CyberArk services and establish secure trust relationships with their AWS environments.
+This Terraform module onboards AWS member accounts to Connect Cloud Environments (CCE) with Idira SaaS services.
+CCE helps customers easily adopt Idira services and establish secure trust relationships with their AWS environments.
 
 ## Overview
 
@@ -21,7 +21,7 @@ This module is designed to be run on **AWS member accounts** after the [CCE orga
 
 Before using this module, ensure that you have the following information and requirements:
 
-1. **CyberArk Identity Security Platform Account**
+1. **Idira Identity Security Platform Account**
    - API credentials (client ID and secret)
    - Tenant URL
 
@@ -34,7 +34,7 @@ Before using this module, ensure that you have the following information and req
 3. **Terraform Requirements**
    - Terraform >= 1.7.5
    - AWS Provider ~> 5.0
-   - CyberArk idsec Provider ~> 0.1
+   - Idira idsec Provider ~> 0.1
 
 ## Usage
 
@@ -59,7 +59,7 @@ provider "aws" {
 }
 
 provider "idsec" {
-  # Configure with your CyberArk tenant credentials
+  # Configure with your Idira tenant credentials
   # See: https://registry.terraform.io/providers/cyberark/idsec/latest/docs
 }
 
@@ -135,7 +135,7 @@ Enables secure access to EC2 instances with:
 ### Secrets Hub
 
 Enables centralized secrets management with:
-- Synchronization of secrets from CyberArk vault to AWS Secrets Manager
+- Synchronization of secrets from Idira vault to AWS Secrets Manager
 - Automated secret lifecycle management
 - Compliance and audit trail for secrets access
 - Support for secret rotation and updates

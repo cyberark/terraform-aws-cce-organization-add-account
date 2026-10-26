@@ -4,7 +4,7 @@ This example demonstrates how to deploy the CCE Add Account module with only the
 
 ## Overview
 
-This example deploys the SIA (Secure Infrastructure Access) service module, which creates the necessary IAM roles and policies for CyberArk's Secure Infrastructure Access service.
+This example deploys the SIA (Secure Infrastructure Access) service module, which creates the necessary IAM roles and policies for the Secure Infrastructure Access service.
 
 ## Prerequisites
 
@@ -20,7 +20,7 @@ This example deploys the SIA (Secure Infrastructure Access) service module, whic
 3. **Terraform**
    - Terraform >= 1.8.5
    - AWS Provider ~> 5.0
-   - CyberArk idsec Provider 0.2.0-dd80a1
+   - Idira idsec Provider 0.2.0-dd80a1
 
 ## Usage
 
@@ -61,7 +61,7 @@ This example creates the following resources:
 
 ## Outputs
 
-- `sia_role_arn`: The ARN of the IAM role that CyberArk SIA will assume for EC2 access
+- `sia_role_arn`: The IAM role ARN that SIA assumes for EC2 access
 
 ## Important Notes
 
