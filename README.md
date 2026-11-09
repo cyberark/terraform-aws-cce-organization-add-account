@@ -120,6 +120,8 @@ Provides just-in-time privileged access to cloud resources with:
 
 **EKS cluster permissions:** Set **`add_permissions_to_manage_cluster = true`** on the management-account [organization module](https://github.com/cyberark/terraform-aws-cce-organization) (`sca` block); it is stored as **`addPermissionsToManageCluster`** in org parameters. When that value is `true`, this module attaches EKS cluster management permissions to the member-account SCA role (full SCA role for IAM members; role + EKS policy only for IDC members).
 
+**Extended CLI sessions (OIDC):** Set **`enable_extended_cli_sessions = true`** on the management-account [organization module](https://github.com/cyberark/terraform-aws-cce-organization) (`sca` block); it is stored as **`enableExtendedCliSessions`** in org parameters. When that value is `true`, this module attaches IAM OIDC-provider permissions (create/get/delete) for the AWS CLI credentials extension flow to the member-account SCA role. Applies to IAM members only (`sso_enable = false`).
+
 
 ### SIA (Secure Infrastructure Access)
 

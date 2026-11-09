@@ -36,7 +36,8 @@ locals {
     local.parameters.sca.addPermissionsToManageCluster,
     try(local.parameters.sca.add_permissions_to_manage_cluster, false)
   )
-  sca_service_region = contains(var.services, "sca") ? data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.sca.service_region : null
+  sca_enable_extended_cli_sessions = try(tobool(tostring(local.parameters.sca.enableExtendedCliSessions)), false)
+  sca_service_region               = contains(var.services, "sca") ? data.idsec_cce_aws_tenant_service_details.get_tenant_data.services_details.sca.service_region : null
 
   # A member account has no version of its own - it inherits the parent organization's. Carrying the
   # organization's version here is what makes an organization upgrade visible to Terraform's plan:
@@ -63,6 +64,7 @@ locals {
         ssoEnable                     = tostring(local.sca_sso_enable)
         ssoRegion                     = local.sca_sso_enable ? local.parameters.sca.sso_region : null
         addPermissionsToManageCluster = local.sca_add_permissions_to_manage_cluster
+        enableExtendedCliSessions     = local.sca_enable_extended_cli_sessions
       }
     }] : [],
 
@@ -132,6 +134,7 @@ module "sca" {
   sca_power_role_arn                = local.parameters.sca.sca_power_role_arn
   custom_role_name                  = var.role_name
   add_permissions_to_manage_cluster = local.sca_add_permissions_to_manage_cluster
+  enable_extended_cli_sessions      = local.sca_enable_extended_cli_sessions
   count                             = contains(var.services, "sca") ? 1 : 0
 }
 

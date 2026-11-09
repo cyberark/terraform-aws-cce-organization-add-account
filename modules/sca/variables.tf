@@ -48,3 +48,9 @@ variable "add_permissions_to_manage_cluster" {
   type        = bool
   default     = false
 }
+
+variable "enable_extended_cli_sessions" {
+  description = "When true (and the member account is an IAM member, i.e. sso_enable is false), grants the SCA cross-account role IAM OIDC-provider permissions for the AWS CLI credentials extension flow."
+  type        = bool
+  default     = false
+}

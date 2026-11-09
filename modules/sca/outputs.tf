@@ -5,6 +5,7 @@ output "deployed_resources" {
     ssoEnable                     = tostring(var.sso_enable)
     ssoRegion                     = var.sso_region
     addPermissionsToManageCluster = var.add_permissions_to_manage_cluster
+    enableExtendedCliSessions     = var.enable_extended_cli_sessions
   }
 }
 
@@ -18,5 +19,7 @@ output "module_ready" {
     try(one(aws_iam_role_policy_attachment.sca_cross_account_role_attached_to_account_permissions_policy[*].id), null),
     try(aws_iam_policy.sca_eks_cluster_permissions_policy[0].arn, null),
     try(aws_iam_role_policy_attachment.sca_cross_account_role_attached_to_eks_cluster_policy[0].id, null),
+    try(aws_iam_policy.sca_aws_cli_extension_permissions_policy[0].arn, null),
+    try(aws_iam_role_policy_attachment.sca_cross_account_role_attached_to_aws_cli_extension_policy[0].id, null),
   ])
 }
